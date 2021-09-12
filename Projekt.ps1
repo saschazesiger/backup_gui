@@ -45,19 +45,50 @@ $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
 #Provide Custom Code for events specified in PrimalForms.
 $pfad2loeschen_OnClick= 
 {
-#TODO: Place custom script here
-
+    $pfad2.Text = $null
 }
 
 $pfad1suche_OnClick= 
 {
-#TODO: Place custom script here
+    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog
+    $foldername.rootfolder = "MyComputer"
+    $foldername.SelectedPath = $initialDirectory
+    if($foldername.ShowDialog() -eq "OK"){
+        $pfad1.Text = $foldername.SelectedPath
+    }
+
 
 }
 
+
+[int]$random = get-random
+[string]$date = Get-Date -Format "MM-dd-yyyy_HH-mm-ss"
+[string]$ordner = ""
+
 $start_OnClick= 
 {
-#TODO: Place custom script here
+
+    $drives.SelectedItem
+    if ($drives.SelectedItem -eq $null){$listBox2.Items.Add("Bitte eine Zielfestplatte auswählen!")|Out-Null }
+    else {
+        $ordner = $drives.SelectedItem+"Backup\"
+        $ordner = $ordner+$date
+        if (test-path -path $ordner){$listBox2.Items.Add($ordner+" existiert bereits")|Out-Null}
+        else {$listBox2.Items.Add($ordner+" wird erstellt...")|Out-Null;mkdir $ordner}
+        cd ~
+        if ($desktop.checked){Copy-Item  -Path .\Desktop -Destination $ordner -Recurse -force; $listBox2.Items.Add("Desktop erfolgreich übertragen")|Out-Null}
+        if ($dokumente.checked){Copy-Item  -Path .\Documents -Destination $ordner -Recurse -force; $listBox2.Items.Add("Dokumente erfolgreich übertragen")|Out-Null}
+        if ($downloads.checked){Copy-Item  -Path .\Downloads -Destination $ordner -Recurse -force; $listBox2.Items.Add("Downloads erfolgreich übertragen")|Out-Null}
+        if ($musik.checked){Copy-Item  -Path .\Music -Destination $ordner -Recurse -force; $listBox2.Items.Add("Musik erfolgreich übertragen")|Out-Null}
+        if ($bilder.checked){Copy-Item  -Path .\Pictures -Destination $ordner -Recurse -force; $listBox2.Items.Add("Bilder erfolgreich übertragen")|Out-Null}
+        if ($videos.checked){Copy-Item  -Path .\Videos -Destination $ordner -Recurse -force; $listBox2.Items.Add("Videos erfolgreich übertragen")|Out-Null}
+        if ($pfad2.text -ne ""){Copy-Item  -Path $pfad2.text -Destination $ordner -Recurse -force; $listBox2.Items.Add("$pfad2.text erfolgreich übertragen")|Out-Null}
+        if ($pfad1.text -ne ""){Copy-Item  -Path $pfad1.text -Destination $ordner -Recurse -force; $listBox2.Items.Add("$pfad1.text erfolgreich übertragen")|Out-Null}
+    }if ($zip.Checked){
+        
+    }
+
+
 
 }
 
@@ -69,7 +100,7 @@ $handler_checkBox7_CheckedChanged=
 
 $pfad1loeschen_OnClick= 
 {
-#TODO: Place custom script here
+    $pfad1.Text = $null
 
 }
 
@@ -81,7 +112,12 @@ $handler_checkBox3_CheckedChanged=
 
 $pfad2suche_OnClick= 
 {
-#TODO: Place custom script here
+    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog
+    $foldername.rootfolder = "MyComputer"
+    $foldername.SelectedPath = $initialDirectory
+    if($foldername.ShowDialog() -eq "OK"){
+        $pfad2.Text = $foldername.SelectedPath
+    }
 
 }
 
@@ -242,7 +278,7 @@ $System_Drawing_Point.X = 545
 $System_Drawing_Point.Y = 213
 $passeingabe.Location = $System_Drawing_Point
 $passeingabe.Name = "passeingabe"
-$passeingabe.PasswordChar = '?'
+$passeingabe.PasswordChar ='?'
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Height = 21
 $System_Drawing_Size.Width = 193
@@ -262,7 +298,7 @@ $pass.Location = $System_Drawing_Point
 $pass.Name = "pass"
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Height = 24
-$System_Drawing_Size.Width = 219
+$System_Drawing_Size.Width = 245
 $pass.Size = $System_Drawing_Size
 $pass.TabIndex = 16
 $pass.Text = "Zip Archiv mit Passwort verschlüsseln"
@@ -280,12 +316,15 @@ $zip.Location = $System_Drawing_Point
 $zip.Name = "zip"
 $System_Drawing_Size = New-Object System.Drawing.Size
 $System_Drawing_Size.Height = 24
-$System_Drawing_Size.Width = 193
+$System_Drawing_Size.Width = 250
 $zip.Size = $System_Drawing_Size
 $zip.TabIndex = 15
 $zip.Text = "Dateien als Zip Archiv speichern"
 $zip.UseVisualStyleBackColor = $True
 $zip.add_CheckedChanged($handler_checkBox7_CheckedChanged)
+#$zip.Enabled = $False
+#$zip.Checked = $True
+$zip.ForeColor = [System.Drawing.Color]::FromArgb(255,255,255,255)
 
 $form1.Controls.Add($zip)
 
@@ -542,4 +581,6 @@ $form1.ShowDialog()| Out-Null
 
 #Call the Function
 GenerateForm
+
+
 
