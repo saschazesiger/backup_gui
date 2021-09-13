@@ -64,13 +64,23 @@ $pfad1suche_OnClick=
 [int]$random = get-random
 [string]$date = Get-Date -Format "MM-dd-yyyy_HH-mm-ss"
 [string]$ordner = ""
-
+[string]$leer = "ja"
 $start_OnClick= 
 {
-
+    $listBox2.BackColor = "snow"
     $drives.SelectedItem
-    if ($drives.SelectedItem -eq $null){$listBox2.Items.Add("Bitte eine Zielfestplatte auswählen!")|Out-Null }
+    if ($drives.SelectedItem -eq $null){$listBox2.Items.Add("Bitte eine Zielfestplatte auswählen!")|Out-Null; $listBox2.BackColor = "tomato"}
     else {
+        if ($desktop.checked){$leer = "nein"}
+        if ($dokumente.checked){$leer = "nein"}
+        if ($downloads.checked){$leer = "nein"}
+        if ($musik.checked){$leer = "nein"}
+        if ($bilder.checked){$leer = "nein"}
+        if ($videos.checked){$leer = "nein"}
+        if ($pfad2.text -ne ""){$leer = "nein"}
+        if ($pfad1.text -ne ""){$leer = "nein"}
+        if ($leer -eq "ja"){$listBox2.Items.Add("Bitte mindestens eine Quelle auswählen!")|Out-Null; $listBox2.BackColor = "tomato"}
+        else {
         $ordner = $drives.SelectedItem+"Backup\"
         $ordner = $ordner+$date
         if (test-path -path $ordner){$listBox2.Items.Add($ordner+" existiert bereits")|Out-Null}
@@ -84,13 +94,38 @@ $start_OnClick=
         if ($videos.checked){Copy-Item  -Path .\Videos -Destination $ordner -Recurse -force; $listBox2.Items.Add("Videos erfolgreich übertragen")|Out-Null}
         if ($pfad2.text -ne ""){Copy-Item  -Path $pfad2.text -Destination $ordner -Recurse -force; $listBox2.Items.Add("$pfad2.text erfolgreich übertragen")|Out-Null}
         if ($pfad1.text -ne ""){Copy-Item  -Path $pfad1.text -Destination $ordner -Recurse -force; $listBox2.Items.Add("$pfad1.text erfolgreich übertragen")|Out-Null}
-    }if ($zip.Checked){
-        
-    }
+    if ($zip.Checked){
+        if ($pass.Checked){
+            if (Get-Module -ListAvailable -Name 7Zip4Powershell) {
+                $listBox2.Items.Add("7zip existiert bereits")|Out-Null
+            } 
+            else {
+                $listBox2.Items.Add("NuGet wird installiert...")|Out-Null
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+                Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -force
+                $listBox2.Items.Add("7zip wird installiert...")|Out-Null
+                Install-Module -Name 7Zip4Powershell -RequiredVersion 1.8.0
+                $listBox2.Items.Add("7zip erfolgreich installiert")|Out-Null
+            }
+                cd $ordner
+                cd ../
+                $listBox2.Items.Add("Archiv wird erstellt und verschlüsselt...")|Out-Null
+                Compress-7Zip -Path $ordner -password $passeingabe.text -ArchiveFileName $date".zip" -Format Zip
+                $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null
+                remove-item -Path $ordner -Recurse -force
+        }else {
+            cd $ordner
+            cd ../
+            $listBox2.Items.Add("Archiv wird erstellt...")|Out-Null
+            Compress-7Zip -Path $ordner -ArchiveFileName $date".zip" -Format Zip
+            $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null
+            remove-item -Path $ordner -Recurse -force
+        }
+        $listBox2.Items.Add("Backup erfolgreich abgeschlossen!")|Out-Null
+        $listBox2.BackColor = "springgreen"
+        }
 
-
-
-}
+}}}
 
 $handler_checkBox7_CheckedChanged= 
 {
