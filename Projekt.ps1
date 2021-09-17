@@ -50,10 +50,10 @@ $pfad2loeschen_OnClick=
 
 $pfad1suche_OnClick= 
 {
-    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog
-    $foldername.rootfolder = "MyComputer"
-    $foldername.SelectedPath = $initialDirectory
-    if($foldername.ShowDialog() -eq "OK"){
+    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog #Auswähldialog wird geladen
+    $foldername.rootfolder = "MyComputer"                             #Rootfolder für Dialog wird festgelegt
+    $foldername.SelectedPath = $initialDirectory                      #Ausgewählter Ordner = MyComputer
+    if($foldername.ShowDialog() -eq "OK"){                            #Wenn Ok gedrückt wird = Pfad wird ausgewählt
         $pfad1.Text = $foldername.SelectedPath
     }
 
@@ -61,17 +61,17 @@ $pfad1suche_OnClick=
 }
 
 
-[int]$random = get-random
-[string]$date = Get-Date -Format "MM-dd-yyyy_HH-mm-ss"
-[string]$ordner = ""
-[string]$leer = "ja"
+[int]$random = get-random                                             #Eine Random Zahl wird generiert
+[string]$date = Get-Date -Format "MM-dd-yyyy_HH-mm-ss"                #Derzeitiges Datum und Uhrzeit für Backupordner
+[string]$ordner = ""                                                  #Backupordner
+[string]$leer = "ja"                                                  #Für Fehleingaben
 $start_OnClick= 
 {
     $listBox2.BackColor = "snow"
-    $drives.SelectedItem
+    $drives.SelectedItem                                              #Erkennt ob eine Zielfestplatte ausgewählt worden ist
     if ($drives.SelectedItem -eq $null){$listBox2.Items.Add("Bitte eine Zielfestplatte auswählen!")|Out-Null; $listBox2.BackColor = "tomato"}
     else {
-        if ($desktop.checked){$leer = "nein"}
+        if ($desktop.checked){$leer = "nein"}                         #Erkennt ob mindestens eine Quelle ausgewählt worden ist
         if ($dokumente.checked){$leer = "nein"}
         if ($downloads.checked){$leer = "nein"}
         if ($musik.checked){$leer = "nein"}
@@ -81,11 +81,11 @@ $start_OnClick=
         if ($pfad1.text -ne ""){$leer = "nein"}
         if ($leer -eq "ja"){$listBox2.Items.Add("Bitte mindestens eine Quelle auswählen!")|Out-Null; $listBox2.BackColor = "tomato"}
         else {
-        $ordner = $drives.SelectedItem+"Backup\"
-        $ordner = $ordner+$date
-        if (test-path -path $ordner){$listBox2.Items.Add($ordner+" existiert bereits")|Out-Null}
-        else {$listBox2.Items.Add($ordner+" wird erstellt...")|Out-Null;mkdir $ordner}
-        cd ~
+        $ordner = $drives.SelectedItem+"Backup\"                      #$Ordner zu Zielpfad
+        $ordner = $ordner+$date                                       #$Ordner mit Zielordner ergänzen
+        if (test-path -path $ordner){$listBox2.Items.Add($ordner+" existiert bereits")|Out-Null}  #Überprüfen ob dieser Ordner bereits existiert
+        else {$listBox2.Items.Add($ordner+" wird erstellt...")|Out-Null;mkdir $ordner}            #Erstellt Zielordner
+        cd ~                                                          #Überprüft die einzelnen Checkboxen ob sie markiert sind
         if ($desktop.checked){Copy-Item  -Path .\Desktop -Destination $ordner -Recurse -force; $listBox2.Items.Add("Desktop erfolgreich übertragen")|Out-Null}
         if ($dokumente.checked){Copy-Item  -Path .\Documents -Destination $ordner -Recurse -force; $listBox2.Items.Add("Dokumente erfolgreich übertragen")|Out-Null}
         if ($downloads.checked){Copy-Item  -Path .\Downloads -Destination $ordner -Recurse -force; $listBox2.Items.Add("Downloads erfolgreich übertragen")|Out-Null}
@@ -96,33 +96,33 @@ $start_OnClick=
         if ($pfad1.text -ne ""){Copy-Item  -Path $pfad1.text -Destination $ordner -Recurse -force; $listBox2.Items.Add("$pfad1.text erfolgreich übertragen")|Out-Null}
     if ($zip.Checked){
         if ($pass.Checked){
-            if (Get-Module -ListAvailable -Name 7Zip4Powershell) {
+            if (Get-Module -ListAvailable -Name 7Zip4Powershell) {    #Falls 7zip nicht existiert Addon installieren (Benötigt Admin, ansonsten erscheint Fehler)
                 $listBox2.Items.Add("7zip existiert bereits")|Out-Null
             } 
             else {
-                $listBox2.Items.Add("NuGet wird installiert...")|Out-Null
-                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-                Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -force
-                $listBox2.Items.Add("7zip wird installiert...")|Out-Null
-                Install-Module -Name 7Zip4Powershell -RequiredVersion 1.8.0
-                $listBox2.Items.Add("7zip erfolgreich installiert")|Out-Null
+                $listBox2.Items.Add("NuGet wird installiert...")|Out-Null             #Nuget wird für 7zip benötigt
+                Set-PSRepository -Name PSGallery -InstallationPolicy Trusted          #Repository von Nuget als vertrauenswürdig einstufen
+                Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -force  #Installiert Nuget
+                $listBox2.Items.Add("7zip wird installiert...")|Out-Null              #Log
+                Install-Module -Name 7Zip4Powershell -RequiredVersion 1.8.0           #7zip installieren
+                $listBox2.Items.Add("7zip erfolgreich installiert")|Out-Null          #Log
             }
-                cd $ordner
+                cd $ordner                                                            #Führt Scripts im Backupordner aus
                 cd ../
-                $listBox2.Items.Add("Archiv wird erstellt und verschlüsselt...")|Out-Null
-                Compress-7Zip -Path $ordner -password $passeingabe.text -ArchiveFileName $date".zip" -Format Zip
-                $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null
-                remove-item -Path $ordner -Recurse -force
+                $listBox2.Items.Add("Archiv wird erstellt und verschlüsselt...")|Out-Null                        #log
+                Compress-7Zip -Path $ordner -password $passeingabe.text -ArchiveFileName $date".zip" -Format Zip #Erstellt Passwortverschlüsseltes Zip
+                $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null                               #log                            
+                remove-item -Path $ordner -Recurse -force                                                        #Temporärer Ordner löschen wenn Zip erstellt worden ist
         }else {
             cd $ordner
             cd ../
-            $listBox2.Items.Add("Archiv wird erstellt...")|Out-Null
-            Compress-7Zip -Path $ordner -ArchiveFileName $date".zip" -Format Zip
-            $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null
-            remove-item -Path $ordner -Recurse -force
+            $listBox2.Items.Add("Archiv wird erstellt...")|Out-Null                                              #log
+            Compress-7Zip -Path $ordner -ArchiveFileName $date".zip" -Format Zip                                 #Zip ohne Passwort erstellen
+            $listBox2.Items.Add("Temporärer Ordern wird gelöscht...")|Out-Null                                   #log
+            remove-item -Path $ordner -Recurse -force                                                            #Temporärer Ordner löschen
         }
-        $listBox2.Items.Add("Backup erfolgreich abgeschlossen!")|Out-Null
-        $listBox2.BackColor = "springgreen"
+        $listBox2.Items.Add("Backup erfolgreich abgeschlossen!")|Out-Null                                        #log
+        $listBox2.BackColor = "springgreen"                                                                      #log Grün (Erfolg)
         }
 
 }}}
@@ -135,7 +135,7 @@ $handler_checkBox7_CheckedChanged=
 
 $pfad1loeschen_OnClick= 
 {
-    $pfad1.Text = $null
+    $pfad1.Text = $null           #Leert Pfad bei Eingabe
 
 }
 
@@ -147,10 +147,10 @@ $handler_checkBox3_CheckedChanged=
 
 $pfad2suche_OnClick= 
 {
-    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog
-    $foldername.rootfolder = "MyComputer"
-    $foldername.SelectedPath = $initialDirectory
-    if($foldername.ShowDialog() -eq "OK"){
+    $foldername = New-Object System.Windows.Forms.FolderBrowserDialog  #Folderbrowsing aktivieren
+    $foldername.rootfolder = "MyComputer"                              #Standardpfad beim Öffnen des Dialogs auswählen
+    $foldername.SelectedPath = $initialDirectory                       #Standardmässig ausgewählter Ordner
+    if($foldername.ShowDialog() -eq "OK"){                             #Wenn ok gedrückt wird wird der Ausgewählte Ordner gesetzt
         $pfad2.Text = $foldername.SelectedPath
     }
 
@@ -170,8 +170,7 @@ $handler_form1_Load=
 
 $handler_checkBox5_CheckedChanged= 
 {
-#TODO: Place custom script here
-
+$pass.Visible = $false
 }
 
 $handler_openFileDialog1_FileOk= 
